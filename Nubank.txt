@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FluBank - Simulador Completo</title>
+<style>
+  /* Reset básico */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212; color: #fff;
+    min-height: 100vh; display: flex; justify-content: center; align-items: center;
+  }
+  .hidden { display: none; }
+  .container {
+    background: #1e1e1e; border-radius: 12px;
+    width: 360px; max-width: 95vw;
+    box-shadow: 0 0 20px #820AD144;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center; margin-bottom: 10px;
+    color: #820AD1;
+  }
+  input[type=text], input[type=password], input[type=number] {
+    width: 100%; padding: 12px; margin: 8px 0 12px 0;
+    border-radius: 8px; border: none; background: #2a2a2a;
+    color: #fff; font-size: 16px;
+  }
+  button {
+    width: 100%; padding: 12px;
+    background-color: #820AD1; border: none; border-radius: 8px;
+    color: white; font-weight: 600; font-size: 16px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #6a07ab;
+  }
+  .btn-secundario {
+    background-color: #444; width: auto; padding: 8px 15px;
+    font-weight: 500; margin: 0 5px 0 0;
+  }
+  .btn-secundario:hover {
+    background-color: #555;
+  }
+  .actions {
+    display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+  }
+  .actions input[type=number] {
+    width: 120px;
+    margin: 0;
+  }
+  .saldo {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .simulador-tag {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 15px;
+    text-align: center;
+  }
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 15px;
+  }
+  .header p {
+    margin: 0; font-weight: 600;
+  }
+  .card {
+    background-color: #2a2a2a;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+  }
+  .transacoes {
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .transacao {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #444;
+    font-size: 14px;
+  }
+  .transacao:last-child {
+    border-bottom: none;
+  }
+  .transacao .descricao {
+    flex: 1;
+  }
+  .transacao .valor {
+    min-width: 70px; text-align: right;
+  }
+  .cartao-virtual {
+    background: linear-gradient(135deg, #6f27cf, #820AD1);
+    border-radius: 16px;
+    padding: 20px;
+    color: #fff;
+    font-weight: 600;
+    user-select: none;
+    margin-bottom: 20px;
+  }
+  .cartao-virtual .linha {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .cartao-virtual .numero-cartao {
+    letter-spacing: 3px;
+    font-size: 20px;
+  }
+  .cartao-virtual .nome-titular {
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  .cartao-virtual .validade {
+    font-size: 14px;
+  }
+  .editavel {
+    background-color: #444;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+    outline: none;
+    color: #fff;
+    font-weight: 600;
+  }
+  .btn-pequeno {
+    padding: 6px 12px;
+    font-size: 14px;
+    margin-left: 5px;
+  }
+  .flex-center {
+    display: flex;
+    align-items: center;
+  }
+  .btn-group {
+    display: flex;
+    justify-content: space-around;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- LOGIN -->
+  <div id="tela-login">
+    <h1>FluBank</h1>
+    <input type="text" id="inputNome" placeholder="Seu nome" autocomplete="off" />
+    <input type="password" id="inputSenha" placeholder="Senha (qualquer uma)" autocomplete="off" />
+    <button onclick="fazerLogin()">Entrar</button>
+    <p class="simulador-tag">⚠️ Simulador falso. Sem conexão bancária real.</p>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tela-dashboard" class="hidden">
+    <div class="header">
+      <p>Olá, <span id="nomeUsuario"></span> 👋</p>
+      <button class="btn-secundario" onclick="fazerLogout()">Sair</button>
+    </div>
+
+    <div class="card">
+      <p>Saldo disponível:</p>
+      <p class="saldo" id="saldo">••••••••</p>
+      <div class="actions">
+        <button class="btn-secundario" id="btnToggleSaldo" onclick="toggleSaldo()">👁️ Mostrar</button>
+        <input type="number" id="inputAdicionar" placeholder="R$" min="0" />
+        <button onclick="adicionarSaldo()" class="btn">Adicionar R$</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Cartão Virtual</h3>
+      <div class="cartao-virtual">
+        <div class="linha numero-cartao" contenteditable="true" spellcheck="false" id="numeroCartao">1234 5678 9012 3456</div>
+        <div class="linha flex-center">
+          <div class="nome-titular editavel" contenteditable="true" spellcheck="false" id="nomeTitular">NOME DO TITULAR</div>
+          <div class="validade editavel" contenteditable="true" spellcheck="false" id="validadeCartao">12/34</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Últimas Transações</h3>
+      <div id="listaTransacoes" class="transacoes">
+        <!-- Transações inseridas aqui -->
+      </div>
+      <div class="actions">
+        <input type="text" id="descricaoTransacao" placeholder="Descrição" />
+        <input type="number" id="valorTransacao" placeholder="Valor R$" step="0.01" />
+        <button class="btn btn-pequeno" onclick="adicionarTransacao()">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn">Pagar</button>
+      <button class="btn">Transferir</button>
+      <button class="btn">Copiar PIX</button>
+    </div>
+
+    <p class="simulador-tag">⚠️ Simulador falso para uso em vídeos e influenciadores.</p>
+  </div>
+</div>
+
+<script>
+  // Variáveis iniciais
+  let saldo = 12350.89;
+  let saldoVisivel = false;
+  const storageKey = 'fluBankUser';
+
+  function salvarUsuario(nome) {
+    localStorage.setItem(storageKey, JSON.stringify({
+      nome,
+      saldo,
+      transacoes,
+      cartao: {
+        numero: document.getElementById('numeroCartao').innerText,
+        nome: document.getElementById('nomeTitular').innerText,
+        validade: document.getElementById('validadeCartao').innerText,
+      }
+    }));
+  }
+
+  function carregarUsuario() {
+    const data = localStorage.getItem(storageKey);
+    if (!data) return null;
+    return JSON.parse(data);
+  }
+
+  function fazerLogin() {
+    const nome = document.getElementById('inputNome').value.trim();
+    if (!nome) {
+      alert('Digite seu nome!');
+      return;
+    }
+    // Inicializa variáveis padrão na primeira vez
+    saldo = 12350.89;
+    saldoVisivel = false;
+    transacoes = [
+      { descricao: 'Spotify', valor: -19.90 },
+      { descricao: 'PIX recebido', valor: 250.00 },
+      { descricao: 'Uber', valor: -34.00 },
+      { descricao: 'McDonald\'s', valor: -45.50 }
+    ];
+    // Inicializa cartão
+    document.getElementById('numeroCartao').innerText = "1234 5678 9012 3456";
+    document.getElementById('nomeTitular').innerText = nome.toUpperCase();
+    document.getElementById('validadeCartao').innerText = "12/34";
+
+    salvarUsuario(nome);
+    mostrarDashboard(nome);
+  }
+
+  function mostrarDashboard(nome) {
+    document.getElementById('tela-login').classList.add('hidden');
+    document.getElementById('tela-dashboard').classList.remove('hidden');
+    document.getElementById('nomeUsuario').innerText = nome;
+    atualizarSaldo();
+    atualizarListaTransacoes();
+    atualizarCartao();
+  }
+
+  function fazerLogout() {
+    localStorage.removeItem(storageKey);
+    document.getElementById('tela-dashboard').classList.add('hidden');
+    document.getElementById('tela-login').classList.remove('hidden');
+    limparCamposLogin();
+  }
+
+  function limparCamposLogin() {
+    document.getElementById('inputNome').value = '';
+    document.getElementById('inputSenha').value = '';
+  }
+
+  function toggleSaldo() {
+    saldoVisivel = !saldoVisivel;
+    atualizarSaldo();
+    const btn = document
